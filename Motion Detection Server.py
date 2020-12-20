@@ -48,7 +48,6 @@ def LoadConfig():
 
 def InitCams(config):
     cams = []
-
     
     for cam in config["cams"]:
         try:
@@ -66,6 +65,9 @@ def InitCams(config):
 
 def main():
     config = LoadConfig()
+    if not config:
+        return
+
     cams = InitCams(config)
     if len(cams) == 0:
         return
