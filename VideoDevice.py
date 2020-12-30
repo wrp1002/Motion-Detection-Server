@@ -6,6 +6,10 @@ import queue
 import threading
 import collections
 import imutils
+import requests
+
+from Log import Log
+import logging
 
 historyLen = 30
 videoCodec = cv2.VideoWriter_fourcc("D", "I", "V", "X")
@@ -25,23 +29,32 @@ class VideoCapture:
   # read frames as soon as they are available, keeping only most recent one
     def _reader(self):
         while True:
-            ret, frame = self.cap.read()
-            if not ret:
-                break
+            try:
+                if not self.cap.isOpened():
+                    time.sleep(1)
+                    continue
 
-            if not self.q.empty():
-                try:
-                    self.q.get_nowait()   # discard previous (unprocessed) frame
-                except queue.Empty:
-                    pass
+                ret, frame = self.cap.read()
+                if not ret:
+                    break
 
-            self.q.put(frame)
+                if not self.q.empty():
+                    try:
+                        self.q.get_nowait()   # discard previous (unprocessed) frame
+                    except queue.Empty:
+                        pass
+
+                self.q.put(frame)
+
+            except cv2.error as e:
+                print("Error hsfd")
 
     def read(self):
         return self.q.get()
 
     def get(self, what):
         return self.cap.get(what)
+
 
 class Box:
     def __init__(self, x, y, w, h):
@@ -53,19 +66,32 @@ class Box:
     def GetArea(self):
         return self.w * self.h
 
+
 class VideoDevice:
     def __init__(self, name, url, fps, sensitivity):
-        print("Initializing", name)
         self.name = name
         self.firstFrame = None
         self.url = url
-        self.cap = VideoCapture(self.url)
         self.fps = fps
+        Log("Initializing...", self)
         self.history = collections.deque(maxlen=historyLen)
         self.threshold = 0
         self.sensitivity = sensitivity
+        self.dead = False
 
-        print(name, "initialized with", self.fps, " fps")
+        try:
+            self.cap = VideoCapture(self.url)
+        except Exception as e:
+            Log(e, self, "ERROR")
+
+        if not self.cap.cap.isOpened():
+            Log("Could not start video capture", self, "ERROR")
+            self.dead = True
+            return
+
+        time.sleep(0.5)
+
+        Log("initialized with " + str(self.fps) + " fps", self)
 
     def ShowFrames(self, images):
         outputImage = np.vstack(images)
@@ -83,7 +109,7 @@ class VideoDevice:
                 biggest = box
 
         return biggest
-        
+
 
     def GetBoxes(self, frame):
         boxes = []
@@ -101,42 +127,47 @@ class VideoDevice:
 
 
     def Update(self):
-        frame = self.cap.read()
-        text = "Unoccupied"
+        while not self.dead:
+            frame = self.cap.read()
+            text = "Unoccupied"
 
-        if frame is None:
-            return
+            if frame is None:
+                continue
 
-        frame = imutils.resize(frame, width=500)
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = cv2.GaussianBlur(gray, (21, 21), 0)
+            frame = imutils.resize(frame, width=500)
+            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+            gray = cv2.GaussianBlur(gray, (21, 21), 0)
 
-        if self.firstFrame is None:
-            self.firstFrame = gray
-            return
+            if self.firstFrame is None:
+                self.firstFrame = gray
+                continue
 
-        frameDelta = cv2.absdiff(self.firstFrame, gray)
+            frameDelta = cv2.absdiff(self.firstFrame, gray)
 
-        thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
-        thresh = cv2.dilate(thresh, None, iterations=2)
+            thresh = cv2.threshold(frameDelta, 25, 255, cv2.THRESH_BINARY)[1]
+            thresh = cv2.dilate(thresh, None, iterations=2)
 
-        boxes = self.GetBoxes(thresh)
-        for box in boxes:
-            cv2.rectangle(frame, (box.x, box.y), (box.x + box.w, box.y + box.h), (0, 255, 0), 2)
+            boxes = self.GetBoxes(thresh)
+            for box in boxes:
+                cv2.rectangle(frame, (box.x, box.y), (box.x + box.w, box.y + box.h), (0, 255, 0), 2)
 
-        biggest = self.GetBiggestBox(boxes)
-        if biggest:
-            cv2.rectangle(frame, (biggest.x, biggest.y), (biggest.x + biggest.w, biggest.y + biggest.h), (0, 0, 255), 2)
-            text = "Occupied"
+            biggest = self.GetBiggestBox(boxes)
+            if biggest:
+                cv2.rectangle(frame, (biggest.x, biggest.y), (biggest.x + biggest.w, biggest.y + biggest.h), (0, 0, 255), 2)
+                text = "Occupied"
 
-        cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+            cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-        cv2.imshow(self.name + " Security Feed", frame)
-        cv2.imshow(self.name + " Thresh", thresh)
-        cv2.imshow(self.name + " Frame Delta", frameDelta)
-        cv2.waitKey(1)
+            cv2.imshow(self.name + " Security Feed", frame)
+            #cv2.imshow(self.name + " Thresh", thresh)
+            #cv2.imshow(self.name + " Frame Delta", frameDelta)
+            cv2.waitKey(1)
 
-        
+            print(self.cap.get(cv2.CAP_PROP_FPS))
+
+    def Stop(self):
+        self.dead = True
+        self.cap.cap.release()
 
     def SaveVideo(self):
         startTime = time.time()

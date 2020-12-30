@@ -1,0 +1,16 @@
+{
+    "updated": false,
+    "version": "v0.0",
+    "cams": [
+        {
+            "name": "4 Cam",
+            "url": "rtsp://192.168.4.71",
+            "fps": 30
+        },
+        {
+            "name": "6 Cam",
+            "url": "rtsp://192.168.4.38:8554/live",
+            "fps": 20
+        }
+    ]
+}
