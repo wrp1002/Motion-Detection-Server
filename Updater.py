@@ -1,4 +1,4 @@
-from shutil import copy, rmtree
+import shutil
 from ConfigManager import ConfigManager
 import requests
 import json
@@ -13,9 +13,8 @@ CONFIG_FILE_NAME = "config.json"
 
 githubApiUrl = "https://api.github.com/repos/" + user + "/" + repo + "/releases/latest"
 extension = ".tar.gz"
-scriptDir = os.path.normpath(os.path.dirname(sys.argv[0]))
-print(scriptDir)
-
+scriptDir = os.path.realpath(os.path.dirname(sys.argv[0]))
+print("Current directory:", scriptDir)
 
 def Update(url, version, tarFileName):
     updateDir = os.path.join(scriptDir, "Update", "")
@@ -25,7 +24,7 @@ def Update(url, version, tarFileName):
 
     try:
         if os.path.exists(updateDir):
-            rmtree(updateDir)
+            shutil.rmtree(updateDir)
         os.mkdir(updateDir)
         os.chdir(updateDir)
     except Exception as e:
@@ -42,17 +41,24 @@ def Update(url, version, tarFileName):
 
     print("Extracting update...")
     tar = tarfile.open(tarFileName, "r:gz")
-    extractedDir = os.path.join(scriptDir, tar.getnames()[0])
+    extractedDir = os.path.join(updateDir, tar.getnames()[0])
     tar.extractall()
     tar.close()
 
     print("Copying files to new server...")
     os.rename(extractedDir, serverDir)
-    copy(os.path.join(scriptDir, CONFIG_FILE_NAME), os.path.join(updateDir, serverDir, CONFIG_FILE_NAME))
+    shutil.copy(os.path.join(scriptDir, CONFIG_FILE_NAME), os.path.join(updateDir, serverDir, CONFIG_FILE_NAME))
 
-    print("Updating config...")
-    config = ConfigManager(serverDir, CONFIG_FILE_NAME)
-    config.SetValue("updated", True)
+    #print("Updating config...")
+    #config = ConfigManager(serverDir, CONFIG_FILE_NAME)
+    #config.SetValue("updated", True)
+
+    print("Moving new server files...")
+    os.chdir(scriptDir)
+    files = os.listdir(updateDir)
+    for file in files:
+        shutil.copy(file, scriptDir)
+
 
     print("Done!")
 
