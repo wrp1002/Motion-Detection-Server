@@ -1,16 +1,18 @@
 import json
 import os
+from Log import Log
 
 class ConfigManager:
     def __init__(self, scriptDir, configFileName):
         self.scriptDir = scriptDir
         self.configFileName = configFileName
         self.configFile = os.path.join(scriptDir, configFileName)
+        self.config = {}
+        self.LoadConfig()
         #print(self.configFile)
 
     def SaveDefaultConfig(self):
         data = {
-            "updated": False,
             "version": "v0.0",
             "cams": [
                 {
@@ -29,6 +31,7 @@ class ConfigManager:
             with open(self.configFile, 'r') as configFile:
                 config = json.loads(configFile.read())
                 #print(config)
+                self.config = config
 
                 return config
 
@@ -49,3 +52,16 @@ class ConfigManager:
         config = self.LoadConfig()
         config[key] = value
         self.SaveConfig(config)
+
+    def GetValue(self, key):
+        try:
+            value = self.config[key]
+        except KeyError:
+            Log("Key not found: " + key, messageType="ERROR")
+            return None
+        except Exception as e:
+            Log("Error with config key: " + e, messageType="ERROR")
+            return None
+
+        return value
+

@@ -1,16 +1,16 @@
 {
-    "updated": false,
     "version": "v0.0",
+    "saveVideoLength": 5,
+    "refreshComparisonRate": 10,
+    "outputDir": "./Captures/",
     "cams": [
         {
             "name": "4 Cam",
-            "url": "rtsp://192.168.4.71",
-            "fps": 30
+            "url": "rtsp://192.168.4.71"
         },
         {
             "name": "6 Cam",
-            "url": "rtsp://192.168.4.38:8554/live",
-            "fps": 20
+            "url": "rtsp://192.168.4.38:8554/live"
         }
     ]
 }

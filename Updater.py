@@ -14,7 +14,6 @@ CONFIG_FILE_NAME = "config.json"
 githubApiUrl = "https://api.github.com/repos/" + user + "/" + repo + "/releases/latest"
 extension = ".tar.gz"
 scriptDir = os.path.realpath(os.path.dirname(sys.argv[0]))
-print("Current directory:", scriptDir)
 
 def Update(url, version, tarFileName):
     updateDir = os.path.join(scriptDir, "Update", "")
@@ -55,20 +54,50 @@ def Update(url, version, tarFileName):
 
     print("Moving new server files...")
     os.chdir(scriptDir)
-    files = os.listdir(updateDir)
-    for file in files:
-        shutil.copy(file, scriptDir)
 
+    files = os.listdir(scriptDir)
+    updateFiles = os.listdir(serverDir)
+
+    print(files)
+
+    whitelist = [CONFIG_FILE_NAME, "Update"]
+    for file in files:
+        if file in whitelist:
+            continue
+        print("Deleting:", file)
+        if os.path.isfile(file):
+            os.remove(file)
+        else:
+            shutil.rmtree(file)
+
+    for file in updateFiles:
+        if file in whitelist:
+            continue
+
+        print("Copying:", file)
+        if os.path.isfile(os.path.join(serverDir, file)):
+            shutil.copy(os.path.join(serverDir, file), os.path.join(scriptDir, file))
+        else:
+            shutil.copytree(os.path.join(serverDir, file), os.path.join(scriptDir, file))
+
+    print("Removing Update folder...")
+    shutil.rmtree(updateDir)
 
     print("Done!")
 
+def GetCurrentVersion():
+    config = ConfigManager(scriptDir, CONFIG_FILE_NAME)
+    version = config.GetValue("version")
+    return version
+
+def GetLatestVersion():
+    info = json.loads(requests.get(githubApiUrl).text)
+    version = info["tag_name"]
+    return version
 
 def ShowVersions():
-    info = json.loads(requests.get(githubApiUrl).text)
-    config = ConfigManager(scriptDir, CONFIG_FILE_NAME).LoadConfig()
-
-    latestVersion = info["tag_name"]
-    version = config["version"]
+    latestVersion = GetLatestVersion()
+    version = GetCurrentVersion()
 
     print("Current Version:", version)
     print("Latest version:", latestVersion)
@@ -76,31 +105,48 @@ def ShowVersions():
 
 def main():
     parser = argparse.ArgumentParser(description="Update script for Motion Detection Server")
-    parser.add_argument("--version", help="Display the local version of the server and the latest one", action="store_true")
+    parser.add_argument("--showversions", help="Display the local version of the server and the latest one", action="store_true")
+    parser.add_argument("--shownewest", help="Display the newest version of the server found on github", action="store_true")
+    parser.add_argument("--showcurrent", help="Display the local version of the server", action="store_true")
+    parser.add_argument("--update", help="Update the server to the latest version", action="store_true")
     args = parser.parse_args()
 
-    if args.version:
+    if len(sys.argv) < 2:
+        parser.print_help()
+        return
+
+    if args.showversions:
         ShowVersions()
         return
 
-    info = json.loads(requests.get(githubApiUrl).text)
-    try:
-        url = info["tarball_url"]
-        version = info["tag_name"]
-        repo_name = url.split("/")[-3]
-        file_name = repo_name + "-" + version + extension
-    except KeyError:
-        print()
-        print("Error getting release info from github")
-        print("Response:", info)
-        print()
+    if args.shownewest:
+        print(GetLatestVersion())
         return
 
-    print("Release URL:", url)
-    print("Latest version:", version)
-    print(file_name)
+    if args.showcurrent:
+        print(GetCurrentVersion())
+        return
 
-    Update(url, version, file_name)
+    if args.update:
+        print("Current directory:", scriptDir)
+        info = json.loads(requests.get(githubApiUrl).text)
+        try:
+            url = info["tarball_url"]
+            version = info["tag_name"]
+            repo_name = url.split("/")[-3]
+            file_name = repo_name + "-" + version + extension
+        except KeyError:
+            print()
+            print("Error getting release info from github")
+            print("Response:", info)
+            print()
+            return
+
+        print("Release URL:", url)
+        print("Latest version:", version)
+        print(file_name)
+
+        Update(url, version, file_name)
 
 
 

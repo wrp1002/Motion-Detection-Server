@@ -16,13 +16,14 @@ scriptDir = os.path.dirname(sys.argv[0])
 
 #cam = VideoDevice("PiCam", "rtsp://192.168.4.23:8554/unicast", 10, 1.5)
 #cam = VideoDevice("6 Cam", "rtsp://admin:chris!@192.168.4.38:8554/live", 30, 1.5)
+cm = ConfigManager(scriptDir, CONFIG_FILE_NAME)
 
-def InitCams(config):
+def InitCams():
     cams = []
 
-    for cam in config["cams"]:
+    for cam in cm.GetValue("cams"):
         try:
-            c = VideoDevice(cam["name"], cam["url"], cam["fps"], 1.5)
+            c = VideoDevice(cam["name"], cam["url"], 1.5, cm)
             if c.dead:
                 Log("Error initializing device", c, "ERROR")
             else:
@@ -50,13 +51,7 @@ def HandleMenu():
 
 
 def main():
-    cm = ConfigManager(scriptDir, CONFIG_FILE_NAME)
-    config = cm.LoadConfig()
-
-    if not config:
-        return
-
-    cams = InitCams(config)
+    cams = InitCams()
     if not cams:
         return
 
@@ -74,7 +69,12 @@ def main():
 
     Log("Shutting down...")
     for c in cams:
+        Log("Stopping", c)
         c.Stop()
+    for c in cams:
+        Log("Releasing", c)
+        c.cap.cap.release()
+
     cv2.destroyAllWindows()
 
 
