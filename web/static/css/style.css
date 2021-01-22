@@ -1,0 +1,44 @@
+:root {
+    font-size: 16px;
+    font-family: 'Open Sans';
+    --bg-primary: #141418;
+    --bg-surface: #26262e;
+    
+    --text-primary: #b6b6b6;
+    --text-secondary: #ececec;
+
+    --primary-accent: #6d7fcc;
+    --secondary-accent: #80cbc4;
+
+    --bg-sidenav: #23232e;
+}
+
+body {
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    margin: 0;
+    padding: 0;
+}
+
+main {
+    margin-left: 5rem;
+}
+
+.fas {
+    padding-right: 0.5rem;
+}
+
+.card {
+    background-color: var(--bg-surface);
+    margin-bottom: 1rem;
+}
+
+.btn {
+    background-color: #6d7fcc;
+    color: #fff;
+}
+
+.btn:hover {
+    background-color: #8396E5 !important;
+    color: #fff !important;
+}
