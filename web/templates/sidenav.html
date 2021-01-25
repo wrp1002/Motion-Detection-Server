@@ -7,14 +7,20 @@
 {% endblock %}
 
 
-<nav id="sidebar">
-    <div class="sidebar-header">
-        <h3>Motion Server</h3>
-    </div>
+<nav id="sidebar" class="sidebar">
+    <ul class="sidebar-items">
 
-    <ul class="list-unstyled components">
-        <li>
-            <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-home"></i>Home</a>
+        <li class="sidebar-item sidebar-header">
+            <a href="/">
+                <span class="link-text sidebar-header-text">
+                    <span class="link-text">MotionLink</span>
+                </span>
+                <i class="fas fa-angle-double-left"></i>
+            </a>
+        </li>
+
+        <li class="sidebar-item">
+            <a href="#homeSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-home"></i><span class="link-text">Home</span></a>
             <ul class="collapse list-unstyled" id="homeSubmenu">
                 <li>
                     <a href="#">Home 1</a>
@@ -27,33 +33,24 @@
                 </li>
             </ul>
         </li>
-        <li>
-            <a href="#pageSubmenu" data-toggle="collapse" aria-expanded="false" class="dropdown-toggle"><i class="fas fa-file-alt"></i>Config</a>
-            <ul class="collapse list-unstyled" id="pageSubmenu">
-                <li>
-                    <a href="#">Page 1</a>
-                </li>
-                <li>
-                    <a href="#">Page 2</a>
-                </li>
-                <li>
-                    <a href="#">Page 3</a>
-                </li>
-            </ul>
+
+        <li class="sidebar-item">
+            <a href="/config"><i class="fas fa-file-alt"></i><span class="link-text">Config</span></a>
         </li>
 
-        <li>
-            <a href="#"><i class="fas fa-video"></i>Cameras</a>
+        <li class="sidebar-item">
+            <a href="/cameras"><i class="fas fa-video"></i><span class="link-text">Cameras</span></a>
         </li>
-        <li>
-            <a href="#"><i class="fas fa-cog"></i>Settings</a>
+        <li class="sidebar-item">
+            <a href="#"><i class="fas fa-cog"></i><span class="link-text">Settings</span></a>
         </li>
-    </ul>
 
-    <ul class="list-unstyled CTAs">
-        <li>
-            <a href="https://github.com/wrp1002/Motion-Detection-Server" class="btn">GitHub</a>
+        <li class="sidebar-item">
+            <a href="https://github.com/wrp1002/Motion-Detection-Server" target="_blank">
+                <i class="fab fa-github"></i>
+                <span class="link-text">GitHub</span>
+            </a>
         </li>
+
     </ul>
-    
 </nav>
