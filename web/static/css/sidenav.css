@@ -47,6 +47,9 @@ a:focus {
     z-index: 100;
     font-size: 18px;
 }
+.sidebar:hover {
+    width: 15rem;
+}
 
 .sidebar-items {
     list-style: none;
@@ -62,20 +65,18 @@ a:focus {
     display: inline-block;
     white-space: nowrap;   
 }
-
 .sidebar-item:last-child {
     margin-top: auto;
+}
+
+.sidebar-subitem {
+    padding-left: 1rem;
 }
 
 .link-text {
     display: none;
     margin-left: 1rem;
 }
-
-.sidebar:hover {
-    width: 15rem;
-}
-
 .sidebar:hover .link-text {
     display: inline;
 }
@@ -91,24 +92,20 @@ a:focus {
     height: 4rem;
     padding-top: 0.5rem;
 }
-
 .sidebar-header-text {
     display: inline;
     position: absolute;
     left: -999px;
     transition: 0.3s;
 }
-
 .sidebar:hover .sidebar-header-text {
     left: 0px;
     transition: 0s;
 }
-
 .sidebar-header i {
     transform:rotate(0deg);
     transition: transform 0.3s;
 }
-
 .sidebar:hover .sidebar-header i {
     transform:rotate(180deg);
 }
@@ -119,12 +116,12 @@ a:focus {
     display: block;
 }
 
-#sidebar ul li a:hover {
+.sidebar ul li a:hover {
     color: #7386D5;
     background: #fff;
 }
 
-#sidebar ul li.active>a,
+.sidebar ul li.active>a,
 a[aria-expanded="true"] {
     color: #fff;
     background: #6d7fcc;
@@ -141,7 +138,6 @@ a[data-toggle="collapse"] {
     right: 20px;
     transform: translateY(-50%);
 }
-
 
 ul.sidebar-footer {
     margin-top: auto;
@@ -162,21 +158,4 @@ a.collapse-btn {
     padding: 20px;
     padding-left: 5rem;;
     min-height: 100vh;
-    transition: all 0.3s;
-}
-
-/* ---------------------------------------------------
-    MEDIAQUERIES
------------------------------------------------------ */
-
-@media (max-width: 768px) {
-    #sidebar {
-        margin-left: -250px;
-    }
-    #sidebar.active {
-        margin-left: 0;
-    }
-    #sidebarCollapse span {
-        display: none;
-    }
 }
