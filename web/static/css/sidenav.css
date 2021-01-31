@@ -44,7 +44,7 @@ a:focus {
     transition: all 0.3s ease;
     position: fixed;
     overflow-x: hidden;
-    z-index: 100;
+    z-index: 10;
     font-size: 18px;
 }
 .sidebar:hover {

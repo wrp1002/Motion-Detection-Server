@@ -25,12 +25,59 @@ body {
     margin-bottom: 1rem;
 }
 
-.btn {
+.btn-default {
     background-color: #6d7fcc;
     color: #fff;
 }
 
-.btn:hover {
+.btn-default:hover {
     background-color: #8396E5 !important;
     color: #fff !important;
+}
+
+.btn > i {
+    padding-right: 10px;
+}
+
+.flashes {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    z-index: 100;
+    list-style: none;
+
+    padding: 0;
+    margin: 0;
+}
+
+.flashes li {
+    padding: 3px;
+    padding-right: 10px;
+    margin-bottom: 5px;
+    border-radius: 4px;
+    color: #0F0F0F;
+    font-size: 20px;
+    font-weight:bold;
+    cursor: pointer;
+    float: left;
+    clear: left;
+}
+
+.flashes li i {
+    padding-right: 5px;
+}
+
+.flashes li.message,li.info {
+    background-color: #FFFFBB;
+    color: #AAAA00;
+}
+
+.flashes li.error {
+    background-color: #FFBBBB;
+    color: #BB0000;
+}
+
+.flashes li.success {
+    background-color: #BBFFBB;
+    color: #00BB00;
 }

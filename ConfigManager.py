@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import shutil
 
 from Log import Log
 
@@ -39,26 +40,38 @@ def SaveDefaultConfig():
         file.write(json.dumps(data, indent=4))
 
 def LoadConfig():
+    print("Loading")
     try:
         with open(self.configFile, 'r') as configFile:
             config = json.loads(configFile.read())
-            #print(config)
+            print(config)
             self.config = config
-
             return config
 
     except FileNotFoundError:
         print("Config not found. Creating now... ", end="")
         self.SaveDefaultConfig()
-        return None
+        return LoadConfig()
     except Exception as e:
         print("Error reading config:")
         print(e)
         return None
 
+def RestoreConfig():
+    print("Restoring")
+    if os.path.exists("config.json.back"):
+        os.remove("config.json.back")
+
+    shutil.copyfile(self.configFile, "config.json.back")
+    SaveDefaultConfig()
+    
+    LoadConfig()
+
+
 def SaveConfig(data):
     with open(self.configFile, 'w') as configFile:
         configFile.write(json.dumps(data, indent=4))
+    LoadConfig()
 
 def SetValue(key, value):
     config = self.LoadConfig()
@@ -87,6 +100,8 @@ def _GetValueR(data, *args):
 def GetValueR(*args):
     return _GetValueR(self.config, *args)
 
+def AsString():
+    return json.dumps(self.config)
 
 def Init(scriptDir, configFileName):
     self.scriptDir = scriptDir
@@ -94,6 +109,7 @@ def Init(scriptDir, configFileName):
     self.configFile = os.path.join(scriptDir, configFileName)
     self.config = {}
     LoadConfig()
+    Log("Config loaded!")
     #print(self.configFile)
 
 
