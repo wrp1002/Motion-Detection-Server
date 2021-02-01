@@ -61,16 +61,16 @@ class VideoCapture:
             raise Exception("Could not start video capture")
 
         self.q = queue.Queue()
-        t = threading.Thread(target=self._reader)
-        t.daemon = True
-        t.start()
+        self.dead = False
+        self.updateThread = threading.Thread(target=self._reader)
+        self.updateThread.daemon = True
+        self.updateThread.start()
         Log("Measuring FPS...", cam)
         self.fps = self.MeasureFPS(cam.name)
 
-
   # read frames as soon as they are available, keeping only most recent one
     def _reader(self):
-        while True:
+        while not self.dead:
             try:
                 if not self.cap.isOpened():
                     time.sleep(1)
@@ -96,6 +96,11 @@ class VideoCapture:
 
     def get(self, what):
         return self.cap.get(what)
+
+    def Stop(self):
+        self.dead = True
+        self.updateThread.join()
+        self.cap.release()
 
     def MeasureFPS(self, camName):
         videoWriter = VideoWriter()
@@ -129,29 +134,44 @@ class Box:
 
 
 class VideoDevice:
+    def Init(self):
+        if self.dead:
+            return
+
+        Log("Initializing...", self)
+        try:
+            self.cap = VideoCapture(self.url, self)
+        except Exception as e:
+            Log(e, self, "ERROR")
+            restartTime = config.GetValue("cameraRestartTime")
+            Log("Waiting", restartTime, "`seconds...")
+            time.sleep(restartTime)
+            self.Init()
+            return
+
+        self.fps = self.cap.fps
+        self.prevFrames = collections.deque(maxlen=int(self.fps * config.GetValue("secondsBefore")))
+        self.initialized = True
+        Log("Initialized with {} fps. Will keep a buffer of {} frames".format(self.fps, self.prevFrames.maxlen), cam=self)
+
+        
+
     def __init__(self, name, url, sensitivity):
         self.name = name
-        Log("Initializing...", self)
         self.compareFrame = None
         self.currentFrame = None
         self.url = url
         self.threshold = 0
         self.sensitivity = sensitivity
-        self.dead = False
         self.refreshRate = config.GetValue("refreshComparisonRate")
         self.nextRefreshTime = time.time()
         self.videoWriter = VideoWriter()
+        self.initialized = False
+        self.dead = False
 
-        try:
-            self.cap = VideoCapture(self.url, self)
-        except Exception as e:
-            Log(e, self, "ERROR")
-            self.dead = True
-            return
-
-        self.fps = self.cap.fps
-        self.prevFrames = collections.deque(maxlen=int(self.fps * config.GetValue("secondsBefore")))
-        Log("Initialized with {} fps. Will keep a buffer of {} frames".format(self.fps, self.prevFrames.maxlen), cam=self)
+        # Start update thread
+        self.updateThread = threading.Thread(target=self.Update)
+        self.updateThread.start()
 
     def ShouldUpdateCompareFrame(self):
         return time.time() > self.nextRefreshTime
@@ -212,6 +232,10 @@ class VideoDevice:
     def Update(self):
         while not self.dead:
             try:
+                if not self.initialized:
+                    self.Init()
+                    continue
+
                 frame = self.cap.read()
                 if frame is None:
                     continue
@@ -249,7 +273,7 @@ class VideoDevice:
                 Log("Exception in Update: " + e, self)
 
     def Stop(self):
-        self.dead = True
+        self.cap.Stop()
 
     def GetOuputDir(self):
         outputDir = os.path.abspath(config.GetValue("outputDir"))
@@ -299,8 +323,9 @@ class VideoDevice:
         self.videoWriter.Stop()
 
         self.compareFrame = None
-        #fileName = self.SaveImage(frame)
-        #email.SendImage(fileName)
+        if config.GetValue("email", "enabled"):
+            fileName = self.SaveImage(frame)
+            email.SendImage(fileName)
         #os.sys("ffmpeg -y -r 30 -i 6bad.mp4 6out.mp4")
 
         print("Done!")
@@ -313,5 +338,3 @@ class VideoDevice:
         print("Saving image to", fileName)
         cv2.imwrite(fileName, image)
         return fileName
-
-

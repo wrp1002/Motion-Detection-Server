@@ -1,10 +1,26 @@
 from flask import Flask, jsonify, render_template, flash, request, Response, abort
 import ConfigManager as config
+import VideoManager as video
+import EmailManager as email
 import json
+import os
+import sys
+import time
+import threading
 
 app = Flask(__name__, static_folder="web/static", template_folder="web/templates")
-
 app.secret_key = b'SDFKHW$%^8wTsoigt098'
+
+self = sys.modules[__name__]
+self.targetState = 1
+
+def Stop():
+    time.sleep(1)
+    raise RuntimeError("Server going down")
+
+def Restart():
+    video.Restart()
+    email.Init()
 
 #   Disable cache
 @app.after_request
@@ -48,8 +64,45 @@ def api_config():
     configData = config.AsString()
     return Response(configData, 200)
 
+@app.route('/api/messages')
+def get_messages():
+    state = config.GetValue("email", "enabled")
+    response = json.dumps({
+        "enabled": state
+    })
+    return Response(response, 200)
+
+@app.route('/api/messages/<state>')
+def set_messages(state):
+    enabled = (state == "true" or state == "on")
+    config.SetValue(enabled, "email", "enabled")
+    response = json.dumps({
+        "enabled": enabled
+    })
+    return Response(response, 200)
+
+@app.route('/api/motion')
+def get_motion():
+    state = config.GetValue("motionEnabled")
+    response = json.dumps({
+        "enabled": state
+    })
+    return Response(response, 200)
+
+@app.route('/api/motion/<state>')
+def set_motion(state):
+    enabled = (state == "true" or state == "on")
+    config.SetValue(enabled, "motionEnabled")
+
+    return Response(enabled, 200)
+
+@app.route('/api/restart')
+def restart():
+    threading.Thread(target=Restart).start()
+    return Response('Restarting', 200)
+
 def Run(debug=False):
-    port = config.GetValueR("webserver", "port")
+    port = config.GetValue("webserver", "port")
     print(port)
     app.run(host="0.0.0.0", port=port, debug=debug)
 

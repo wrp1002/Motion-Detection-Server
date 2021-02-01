@@ -2,6 +2,8 @@ import json
 import os
 import sys
 import shutil
+from functools import reduce
+import operator
 
 from Log import Log
 
@@ -73,32 +75,15 @@ def SaveConfig(data):
         configFile.write(json.dumps(data, indent=4))
     LoadConfig()
 
-def SetValue(key, value):
-    config = self.LoadConfig()
-    config[key] = value
-    self.SaveConfig(config)
-
-def GetValue(key):
+def GetValue(*keys):
     try:
-        value = self.config[key]
-    except KeyError:
-        Log("Key not found: " + key, messageType="ERROR")
-        return None
-    except Exception as e:
-        Log("Error with config key: " + e, messageType="ERROR")
+        return reduce(operator.getitem, keys, self.config)
+    except:
+        Log("Key not found: " + str(keys), messageType="ERROR")
         return None
 
-    return value
-
-def _GetValueR(data, *args):
-    if args and data:
-        element  = args[0]
-        if element:
-            value = data.get(element)
-            return value if len(args) == 1 else _GetValueR(value, *args[1:])
-
-def GetValueR(*args):
-    return _GetValueR(self.config, *args)
+def SetValue(value, *keys):
+    GetValue(*keys[:-1])[keys[-1]] = value
 
 def AsString():
     return json.dumps(self.config)

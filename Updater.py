@@ -14,7 +14,6 @@ CONFIG_FILE_NAME = "config.json"
 githubApiUrl = "https://api.github.com/repos/" + user + "/" + repo + "/releases/latest"
 extension = ".tar.gz"
 scriptDir = os.path.realpath(os.path.dirname(sys.argv[0]))
-config.Init(scriptDir, CONFIG_FILE_NAME)
 
 def Update(url, version, tarFileName):
     updateDir = os.path.join(scriptDir, "Update", "")
@@ -85,7 +84,7 @@ def Update(url, version, tarFileName):
     shutil.rmtree(updateDir)
 
     print("Setting new version in config...")
-    config.SetValue("version", version)
+    config.SetValue(version, "version")
 
     print("Done!")
 

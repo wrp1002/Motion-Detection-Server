@@ -48,11 +48,11 @@ def SendImage(ImgFileName):
 
 
 def Init():
-    self.port = config.GetValue("email")["port"]
-    self.smtp_server = config.GetValue("email")["smtp_server"]
-    self.sender_email = config.GetValue("email")["sender_email"]
-    self.receiver_email = config.GetValue("email")["receiver_email"]
-    self.password = config.GetValue("email")["password"]
+    self.port = config.GetValue("email", "port")
+    self.smtp_server = config.GetValue("email", "smtp_server")
+    self.sender_email = config.GetValue("email", "sender_email")
+    self.receiver_email = config.GetValue("email", "receiver_email")
+    self.password = config.GetValue("email", "password")
 
 
 if __name__ == "__main__":

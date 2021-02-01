@@ -5,4 +5,5 @@
     color: var(--text-secondary);
     width: 100%;
     height: 75vh;
+    font-size: large;
 }
