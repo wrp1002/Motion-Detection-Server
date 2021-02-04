@@ -16,6 +16,7 @@ def InitCams():
 
     for cam in config.GetValue("cams"):
         try:
+            print("Adding", cam)
             c = VideoDevice(cam["name"], cam["url"], 1.5)
             if c.dead:
                 Log("Error initializing device", c, "ERROR")

@@ -10,8 +10,6 @@ import os
 CONFIG_FILE_NAME = "config.json"
 scriptDir = os.path.dirname(sys.argv[0])
 
-config.Init(scriptDir, CONFIG_FILE_NAME)
-
 self = sys.modules[__name__]
 self.port = ""
 self.smtp_server = ""

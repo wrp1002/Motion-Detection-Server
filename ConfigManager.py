@@ -42,7 +42,7 @@ def SaveDefaultConfig():
         file.write(json.dumps(data, indent=4))
 
 def LoadConfig():
-    print("Loading")
+    Log("Loading config")
     try:
         with open(self.configFile, 'r') as configFile:
             config = json.loads(configFile.read())
@@ -60,7 +60,7 @@ def LoadConfig():
         return None
 
 def RestoreConfig():
-    print("Restoring")
+    Log("Restoring config")
     if os.path.exists("config.json.back"):
         os.remove("config.json.back")
 

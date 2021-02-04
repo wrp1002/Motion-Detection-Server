@@ -103,7 +103,6 @@ def restart():
 
 def Run(debug=False):
     port = config.GetValue("webserver", "port")
-    print(port)
     app.run(host="0.0.0.0", port=port, debug=debug)
 
 if __name__=="__main__":

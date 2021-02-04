@@ -73,12 +73,13 @@ class VideoCapture:
         while not self.dead:
             try:
                 if not self.cap.isOpened():
-                    time.sleep(1)
+                    self.q.put(None)
                     continue
 
                 ret, frame = self.cap.read()
                 if not ret:
-                    break
+                    self.q.put(None)
+                    continue
 
                 if not self.q.empty():
                     try:
@@ -144,7 +145,7 @@ class VideoDevice:
         except Exception as e:
             Log(e, self, "ERROR")
             restartTime = config.GetValue("cameraRestartTime")
-            Log("Waiting", restartTime, "`seconds...")
+            Log("Waiting " + str(restartTime) + " seconds to try again...", self)
             time.sleep(restartTime)
             self.Init()
             return
@@ -158,16 +159,19 @@ class VideoDevice:
 
     def __init__(self, name, url, sensitivity):
         self.name = name
+        self.cap = None
         self.compareFrame = None
         self.currentFrame = None
         self.url = url
         self.threshold = 0
         self.sensitivity = sensitivity
         self.refreshRate = config.GetValue("refreshComparisonRate")
+        self.missedFrameLimit = config.GetValue("missedFrameLimit")
         self.nextRefreshTime = time.time()
         self.videoWriter = VideoWriter()
         self.initialized = False
         self.dead = False
+        self.missedFrames = 0
 
         # Start update thread
         self.updateThread = threading.Thread(target=self.Update)
@@ -238,7 +242,12 @@ class VideoDevice:
 
                 frame = self.cap.read()
                 if frame is None:
+                    self.missedFrames += 1
+                    if self.missedFrames > self.missedFrameLimit:
+                        self.initialized = False
+                        Log("Device has become unresponsive", self)
                     continue
+                self.missedFrames = 0
 
                 self.prevFrames.appendleft(frame.copy())
                 frame = imutils.resize(frame, width=500)
@@ -273,7 +282,9 @@ class VideoDevice:
                 Log("Exception in Update: " + e, self)
 
     def Stop(self):
-        self.cap.Stop()
+        self.dead = True
+        if self.cap:
+            self.cap.Stop()
 
     def GetOuputDir(self):
         outputDir = os.path.abspath(config.GetValue("outputDir"))

@@ -33,13 +33,12 @@ def main():
     video.InitCams()
     web.Run()
 
-    print("Server stopped")
+    Log("Server stopped")
+    video.Stop()
 
     cv2.destroyAllWindows()
 
 
-
 if __name__ == "__main__":
     main()
-
 
