@@ -11,8 +11,8 @@ $(document).ready(function() {
             url: "/api/restart"
         })
         .done(function() {
-            flash("Restarting")
-            location.reload();
+            flash("Restarting");
+            setTimeout(function(){location.reload();}, 1000);
         });
     });
 
