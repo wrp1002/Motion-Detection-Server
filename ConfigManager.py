@@ -12,14 +12,19 @@ self.scriptDir = ""
 self.configFileName = ""
 self.configFile = ""
 self.config = {}
+self.name = "ConfigManager"
 
 def SaveDefaultConfig():
     data = {
             "version": "v0.0",
             "saveVideoLength": 5,
             "refreshComparisonRate": 10,
+            "cameraRestartTime": 10,
             "secondsBefore": 1,
             "outputDir": "./Captures/",
+            "motionEnabled": True,
+            "missedFrameLimit": 60,
+            "previewTimer": 5,
             "email": {
                 "sender_email": "email@gmail.com",
                 "password": "pass",
@@ -42,7 +47,7 @@ def SaveDefaultConfig():
         file.write(json.dumps(data, indent=4))
 
 def LoadConfig():
-    Log("Loading config")
+    Log("Loading config", self)
     try:
         with open(self.configFile, 'r') as configFile:
             config = json.loads(configFile.read())
@@ -51,11 +56,11 @@ def LoadConfig():
             return config
 
     except FileNotFoundError:
-        print("Config not found. Creating now... ", end="")
+        Log("Config not found. Creating now... ", self)
         self.SaveDefaultConfig()
         return LoadConfig()
     except Exception as e:
-        print("Error reading config:")
+        Log("Error reading config:", self)
         print(e)
         return None
 
@@ -79,7 +84,7 @@ def GetValue(*keys):
     try:
         return reduce(operator.getitem, keys, self.config)
     except:
-        Log("Key not found: " + str(keys), messageType="ERROR")
+        Log("Key not found: " + str(keys), self, messageType="ERROR")
         return None
 
 def SetValue(value, *keys):
@@ -97,7 +102,7 @@ def Init(scriptDir, configFileName):
     self.configFile = os.path.join(scriptDir, configFileName)
     self.config = {}
     LoadConfig()
-    Log("Config loaded!")
+    Log("Config loaded!", self)
     #print(self.configFile)
 
 

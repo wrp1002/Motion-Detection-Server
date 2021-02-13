@@ -30,4 +30,8 @@ $(document).ready(function() {
             $(this).remove();
         });
     });
+
+    $(".close-modal").on('click', function() {
+        $(this).closest('.modal').modal('hide');
+    })
 });

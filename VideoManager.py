@@ -21,7 +21,6 @@ def InitCams():
 
     for cam in config.GetValue("cams"):
         try:
-            print("Adding", cam)
             c = VideoDevice(cam["name"], cam["url"], 1.5, self.nextCamID)
             self.cams.append(c)
             self.nextCamID += 1
@@ -33,12 +32,13 @@ def InitCams():
             print("Error reading key:", e)
             print("================================================================")
 
-    Log("Cameras done")
+    Log("Cameras loaded", self)
 
 def Cleanup():
-    Log("Cleaning preview directory...")
+    Log("Cleaning preview directory...", self)
     for file in os.listdir(os.path.join(config.scriptDir, "web/static/previews/")):
         os.remove(os.path.join(config.scriptDir, "web/static/previews/", file))
+    Log("Done", self)
 
 def Stop():
     Log("Shutting down...")

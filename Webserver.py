@@ -2,6 +2,7 @@ from flask import Flask, jsonify, render_template, flash, request, Response, abo
 import ConfigManager as config
 import VideoManager as video
 import EmailManager as email
+import Updater as updater
 import json
 import os, sys, time, signal
 import threading
@@ -17,6 +18,7 @@ def Stop():
     raise RuntimeError("Server going down")
 
 def Restart():
+    config.LoadConfig()
     video.Restart()
     email.Init()
 
@@ -109,6 +111,15 @@ def shutdown():
 def cameras_status():
     cam_info = video.GetCamInfo()
     return Response(json.dumps(cam_info))
+
+@app.route('/api/versions')
+def api_versions():
+    versions = {
+        "latest": updater.GetLatestVersion(),
+        "current": config.GetValue("version")
+    }
+    return Response(json.dumps(versions))
+
 
 def Run(debug=False):
     port = config.GetValue("webserver", "port")

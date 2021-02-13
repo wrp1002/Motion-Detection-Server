@@ -32,7 +32,7 @@ def HandleMenu():
 def main():
     video.InitCams()
     
-    web.Run(False)
+    web.Run()
     
     Log("Server Shutting Down...")
     video.Stop()
