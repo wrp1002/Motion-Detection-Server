@@ -18,7 +18,6 @@ scriptDir = os.path.dirname(sys.argv[0])
 
 #cam = VideoDevice("PiCam", "rtsp://192.168.4.23:8554/unicast", 10, 1.5)
 #cam = VideoDevice("6 Cam", "rtsp://admin:chris!@192.168.4.38:8554/live", 30, 1.5)
-email.Init()
 
 def HandleMenu():
     options = ["Exit"]
@@ -30,14 +29,19 @@ def HandleMenu():
 
 
 def main():
+    config.LoadConfig()
+    email.Init()
     video.InitCams()
-    
+
     web.Run()
-    
+    shutdownState = web.GetShutdownState()
+
     Log("Server Shutting Down...")
     video.Stop()
     cv2.destroyAllWindows()
 
+    if shutdownState == "restart":
+        main()
 
 if __name__ == "__main__":
     main()

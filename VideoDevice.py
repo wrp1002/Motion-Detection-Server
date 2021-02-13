@@ -10,7 +10,6 @@ import requests
 import time
 
 from Log import Log
-import logging
 import ConfigManager as config
 import EmailManager as email
 
@@ -65,8 +64,9 @@ class VideoCapture:
         self.updateThread = threading.Thread(target=self._reader)
         self.updateThread.daemon = True
         self.updateThread.start()
-        Log("Measuring FPS...", cam)
-        self.fps = self.MeasureFPS(cam.name)
+        self.name = cam.name
+        Log("Measuring FPS...", self)
+        self.fps = self.MeasureFPS()
 
   # read frames as soon as they are available, keeping only most recent one
     def _reader(self):
@@ -90,7 +90,7 @@ class VideoCapture:
                 self.q.put(frame)
 
             except cv2.error as e:
-                Log("cv2 error: " + e, messageType="ERROR")
+                Log("cv2 error: " + str(e), messageType="ERROR")
 
     def read(self):
         return self.q.get()
@@ -103,10 +103,10 @@ class VideoCapture:
         self.updateThread.join()
         self.cap.release()
 
-    def MeasureFPS(self, camName):
+    def MeasureFPS(self):
         videoWriter = VideoWriter()
         height, width = self.read().shape[:2]
-        videoFile = "measure" + camName + ".mp4"
+        videoFile = "measure" + self.name + ".mp4"
         videoWriter.Start(videoFile, 20, width, height, "mp4v")
 
         num_frames = 120
@@ -123,7 +123,7 @@ class VideoCapture:
         try:
             os.remove(videoFile)
         except:
-            Log("Couldn't delete FPS measure file", "WARNING")
+            Log("Couldn't delete FPS measure file", self, "WARNING")
             pass
 
         return fps
@@ -160,7 +160,7 @@ class VideoDevice:
         self.fps = self.cap.fps
         self.prevFrames = collections.deque(maxlen=int(self.fps * config.GetValue("secondsBefore")))
         self.initialized = True
-        Log("Initialized with {} fps. Will keep a buffer of {} frames".format(self.fps, self.prevFrames.maxlen), cam=self)
+        Log("Initialized with {} fps. Will keep a buffer of {} frames".format(self.fps, self.prevFrames.maxlen), self)
 
     def __init__(self, name, url, sensitivity, ID):
         self.name = name
@@ -303,7 +303,7 @@ class VideoDevice:
 
                 cv2.waitKey(1)
             except Exception as e:
-                Log("Exception in Update: " + e, self)
+                Log("Exception in Update: " + str(e), self)
 
     def Stop(self):
         self.dead = True

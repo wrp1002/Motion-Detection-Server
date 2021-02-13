@@ -11,16 +11,20 @@ app = Flask(__name__, static_folder="web/static", template_folder="web/templates
 app.secret_key = b'SDFKHW$%^8wTsoigt098'
 
 self = sys.modules[__name__]
-self.targetState = 1
+self.shutdownState = None
 
 def Stop():
+    self.shutdownState = "shutdown"
     time.sleep(1)
-    raise RuntimeError("Server going down")
+    os.kill(os.getpid(), signal.SIGINT)
 
 def Restart():
-    config.LoadConfig()
-    video.Restart()
-    email.Init()
+    self.shutdownState = "restart"
+    time.sleep(1)
+    os.kill(os.getpid(), signal.SIGINT)
+
+def GetShutdownState():
+    return self.shutdownState
 
 #   Disable cache
 @app.after_request
@@ -104,8 +108,8 @@ def restart():
 
 @app.route('/api/shutdown')
 def shutdown():
-    os.kill(os.getpid(), signal.SIGINT)
-    return Response('Restarting', 200)
+    threading.Thread(target=Stop).start()
+    return Response('Shutting down', 200)
 
 @app.route('/api/cam_info')
 def cameras_status():
