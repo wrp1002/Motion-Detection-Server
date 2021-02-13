@@ -31,11 +31,11 @@ def HandleMenu():
 
 def main():
     video.InitCams()
-    web.Run()
-
-    Log("Server stopped")
+    
+    web.Run(False)
+    
+    Log("Server Shutting Down...")
     video.Stop()
-
     cv2.destroyAllWindows()
 
 

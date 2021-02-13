@@ -3,9 +3,7 @@ import ConfigManager as config
 import VideoManager as video
 import EmailManager as email
 import json
-import os
-import sys
-import time
+import os, sys, time, signal
 import threading
 
 app = Flask(__name__, static_folder="web/static", template_folder="web/templates")
@@ -41,7 +39,8 @@ def indexPage():
 
 @app.route('/cameras')
 def camerasPage():
-    return render_template("cameras.html")
+    camInfo = video.GetCamInfo()
+    return render_template("cameras.html", cam_info=camInfo)
 
 @app.route('/config', methods=["GET", "POST", "DELETE"])
 def configPage():
@@ -100,6 +99,16 @@ def set_motion(state):
 def restart():
     threading.Thread(target=Restart).start()
     return Response('Restarting', 200)
+
+@app.route('/api/shutdown')
+def shutdown():
+    os.kill(os.getpid(), signal.SIGINT)
+    return Response('Restarting', 200)
+
+@app.route('/api/cam_info')
+def cameras_status():
+    cam_info = video.GetCamInfo()
+    return Response(json.dumps(cam_info))
 
 def Run(debug=False):
     port = config.GetValue("webserver", "port")

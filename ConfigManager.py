@@ -88,6 +88,9 @@ def SetValue(value, *keys):
 def AsString():
     return json.dumps(self.config)
 
+def GetScriptDir():
+    return self.scriptDir
+
 def Init(scriptDir, configFileName):
     self.scriptDir = scriptDir
     self.configFileName = configFileName

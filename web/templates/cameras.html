@@ -1,13 +1,31 @@
 {% extends 'layout.html' %}
 
+{% block extra_css %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/cameras.css') }}">
+{% endblock %}
+
+{% block extra_js %}
+    <script src="{{ url_for('static', filename='js/cameras.js') }}"></script>
+{% endblock %}
+
 {% block content %}
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Card title</h5>
-            <p class="card-text">
-                this is where info for a camera would be
-            </p>
-            <a href="/" class="btn">Go home</a>
+    <div class="container-fluid">
+        <div class="row">
+            {% for cam in cam_info %}
+                <div class="col-sm-4">
+                    <div class="card" id="cam-{{ cam.id }}">
+                        {% set file_name = 'previews/' + cam.name + '.jpg' %}
+                        <img class="card-img-top camera-img" src="{{ url_for('static', filename='images/not_connected.jpg') }}" alt="{{ cam.name }}" data-default-src="{{ url_for('static', filename=file_name) }}">
+                        <div class="card-body camera-info">
+                            <h5 class="card-title">{{ cam.name }}</h5>
+                            <p class="card-text">
+                                <span class="status">Status: ???</span>
+                            </p>
+                            <a href="/" class="btn">Go home</a>
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
         </div>
     </div>
 

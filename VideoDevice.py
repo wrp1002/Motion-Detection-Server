@@ -106,7 +106,8 @@ class VideoCapture:
     def MeasureFPS(self, camName):
         videoWriter = VideoWriter()
         height, width = self.read().shape[:2]
-        videoWriter.Start("measure" + camName + ".mp4", 20, width, height, "mp4v")
+        videoFile = "measure" + camName + ".mp4"
+        videoWriter.Start(videoFile, 20, width, height, "mp4v")
 
         num_frames = 120
         start = time.time()
@@ -118,6 +119,12 @@ class VideoCapture:
         seconds = time.time() - start
         fps  = num_frames / seconds
         videoWriter.Stop()
+
+        try:
+            os.remove(videoFile)
+        except:
+            Log("Couldn't delete FPS measure file", "WARNING")
+            pass
 
         return fps
 
@@ -155,11 +162,9 @@ class VideoDevice:
         self.initialized = True
         Log("Initialized with {} fps. Will keep a buffer of {} frames".format(self.fps, self.prevFrames.maxlen), cam=self)
 
-        
-
-    def __init__(self, name, url, sensitivity):
+    def __init__(self, name, url, sensitivity, ID):
         self.name = name
-        self.cap = None
+        self.ID = ID
         self.compareFrame = None
         self.currentFrame = None
         self.url = url
@@ -167,11 +172,14 @@ class VideoDevice:
         self.sensitivity = sensitivity
         self.refreshRate = config.GetValue("refreshComparisonRate")
         self.missedFrameLimit = config.GetValue("missedFrameLimit")
-        self.nextRefreshTime = time.time()
+        self.motionEnabled = config.GetValue("motionEnabled")
         self.videoWriter = VideoWriter()
         self.initialized = False
         self.dead = False
         self.missedFrames = 0
+        self.nextRefreshTime = time.time()
+        self.nextPreviewTime = time.time()
+        self.cap = None
 
         # Start update thread
         self.updateThread = threading.Thread(target=self.Update)
@@ -233,6 +241,17 @@ class VideoDevice:
 
         return (frameDelta, thresh, boxes)
 
+    def SavePreview(self, frame):
+        dir = os.path.join(config.GetScriptDir(), "web/static/previews/", self.name + ".jpg")
+        if os.path.exists(dir):
+            os.remove(dir)
+        self.SaveImage(frame, dir)
+        self.nextPreviewTime = time.time() + config.GetValue("previewTimer")
+
+    def ShouldSavePreview(self):
+        if time.time() > self.nextPreviewTime:
+            return True
+
     def Update(self):
         while not self.dead:
             try:
@@ -249,33 +268,38 @@ class VideoDevice:
                     continue
                 self.missedFrames = 0
 
+                if self.ShouldSavePreview():
+                    self.SavePreview(frame)
+
                 self.prevFrames.appendleft(frame.copy())
-                frame = imutils.resize(frame, width=500)
-                gray = self.ProcessFrame(frame)
 
-                if self.compareFrame is None or self.ShouldUpdateCompareFrame():
-                    self.UpdateCompareFrame(gray)
-                    continue
+                if self.motionEnabled:
+                    frame = imutils.resize(frame, width=500)
+                    gray = self.ProcessFrame(frame)
 
-                frameDelta, thresh, boxes = self.CompareFrames(self.compareFrame, gray)
+                    if self.compareFrame is None or self.ShouldUpdateCompareFrame():
+                        self.UpdateCompareFrame(gray)
+                        continue
 
-                text = "Unoccupied"
-                motion = False
-                biggest = self.GetBiggestBox(boxes)
-                if biggest:
-                    cv2.rectangle(frame, (biggest.x, biggest.y), (biggest.x + biggest.w, biggest.y + biggest.h), (0, 0, 255), 2)
-                    text = "Occupied"
-                    motion = True
+                    frameDelta, thresh, boxes = self.CompareFrames(self.compareFrame, gray)
 
-                cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
+                    text = "Unoccupied"
+                    motion = False
+                    biggest = self.GetBiggestBox(boxes)
+                    if biggest:
+                        cv2.rectangle(frame, (biggest.x, biggest.y), (biggest.x + biggest.w, biggest.y + biggest.h), (0, 0, 255), 2)
+                        text = "Occupied"
+                        motion = True
 
-                #cv2.imshow(self.name + " Security Feed", frame)
-                #cv2.imshow(self.name + " Thresh", thresh)
-                #cv2.imshow(self.name + " Frame Delta", frameDelta)
+                    cv2.putText(frame, "Room Status: {}".format(text), (10, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 0, 255), 2)
 
-                if motion:
-                    self.SaveVideo()
-                    #email.SendMessage("Motion detected from '" + self.name + "'")
+                    #cv2.imshow(self.name + " Security Feed", frame)
+                    #cv2.imshow(self.name + " Thresh", thresh)
+                    #cv2.imshow(self.name + " Frame Delta", frameDelta)
+
+                    if motion:
+                        self.SaveVideo()
+                        #email.SendMessage("Motion detected from '" + self.name + "'")
 
                 cv2.waitKey(1)
             except Exception as e:
@@ -285,6 +309,9 @@ class VideoDevice:
         self.dead = True
         if self.cap:
             self.cap.Stop()
+
+    def IsConnected(self):
+        return self.initialized
 
     def GetOuputDir(self):
         outputDir = os.path.abspath(config.GetValue("outputDir"))
@@ -342,10 +369,13 @@ class VideoDevice:
         print("Done!")
         return fileName
 
-    def SaveImage(self, image):
-        outputDir = self.GetOuputDir()
-        fileName = self.name + "-" + str(time.time()) + ".jpg"
-        fileName = os.path.join(outputDir, fileName)
+    def SaveImage(self, image, outputDir=None):
+        if not outputDir:
+            outputDir = self.GetOuputDir()
+            fileName = self.name + "-" + str(time.time()) + ".jpg"
+            fileName = os.path.join(outputDir, fileName)
+        else:
+            fileName = outputDir
         print("Saving image to", fileName)
         cv2.imwrite(fileName, image)
         return fileName

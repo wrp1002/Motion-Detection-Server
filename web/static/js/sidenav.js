@@ -12,6 +12,14 @@ $(document).ready(function() {
         })
         .done(function() {
             flash("Restarting")
+            location.reload();
         });
-    })
+    });
+
+    $("#shutdown-btn").on('click', function() {
+        flash("Shutting Down...")
+        $.ajax({
+            url: "/api/shutdown"
+        });
+    });
 });
