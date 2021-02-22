@@ -23,6 +23,11 @@ def Restart():
     time.sleep(1)
     os.kill(os.getpid(), signal.SIGINT)
 
+def UpdateServer():
+    self.shutdownState = "update"
+    time.sleep(1)
+    os.kill(os.getpid(), signal.SIGINT)
+
 def GetShutdownState():
     return self.shutdownState
 
@@ -104,12 +109,17 @@ def set_motion(state):
 @app.route('/api/restart')
 def restart():
     threading.Thread(target=Restart).start()
-    return Response('Restarting', 200)
+    return Response('Restarting...', 200)
 
 @app.route('/api/shutdown')
 def shutdown():
     threading.Thread(target=Stop).start()
-    return Response('Shutting down', 200)
+    return Response('Shutting down...', 200)
+
+@app.route('/api/update_server', methods=["POST"])
+def api_update_server():
+    threading.Thread(target=UpdateServer).start()
+    return Response("Updating...", 200)
 
 @app.route('/api/cam_info')
 def cameras_status():

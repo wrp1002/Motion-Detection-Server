@@ -15,7 +15,26 @@ githubApiUrl = "https://api.github.com/repos/" + user + "/" + repo + "/releases/
 extension = ".tar.gz"
 scriptDir = os.path.realpath(os.path.dirname(sys.argv[0]))
 
-def Update(url, version, tarFileName):
+def Update():
+    print("Current directory:", scriptDir)
+    info = json.loads(requests.get(githubApiUrl).text)
+    try:
+        url = info["tarball_url"]
+        version = info["tag_name"]
+        repo_name = url.split("/")[-3]
+        file_name = repo_name + "-" + version + extension
+    except KeyError:
+        print()
+        print("Error getting release info from github")
+        print("Response:", info)
+        print()
+        return False
+
+    print("Release URL:", url)
+    print("Latest version:", version)
+    print(file_name)
+
+
     updateDir = os.path.join(scriptDir, "Update", "")
     serverDir = os.path.join(updateDir, "Motion Detection Server")
 
@@ -130,25 +149,7 @@ def main():
         return
 
     if args.update:
-        print("Current directory:", scriptDir)
-        info = json.loads(requests.get(githubApiUrl).text)
-        try:
-            url = info["tarball_url"]
-            version = info["tag_name"]
-            repo_name = url.split("/")[-3]
-            file_name = repo_name + "-" + version + extension
-        except KeyError:
-            print()
-            print("Error getting release info from github")
-            print("Response:", info)
-            print()
-            return
-
-        print("Release URL:", url)
-        print("Latest version:", version)
-        print(file_name)
-
-        Update(url, version, file_name)
+        Update()
 
 
 

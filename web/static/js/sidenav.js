@@ -10,16 +10,18 @@ $(document).ready(function() {
         $.ajax({
             url: "/api/restart"
         })
-        .done(function() {
-            flash("Restarting");
+        .done(function(res) {
+            flash(res);
             setTimeout(function(){location.reload();}, 1000);
         });
     });
 
     $("#shutdown-btn").on('click', function() {
-        flash("Shutting Down...")
         $.ajax({
             url: "/api/shutdown"
+        })
+        .done(function(res) {
+            flash(res);
         });
     });
 
@@ -34,11 +36,29 @@ $(document).ready(function() {
         })
         .done(function(res) {
             versions = JSON.parse(res);
+            let updated = (versions.current == versions.latest);
             $("#current-version").text("Current Version: " + versions.current);
             $("#latest-version").text("Latest Version: " + versions.latest);
             $("#latest-version").attr('hidden', false);
             $("#current-version").attr('hidden', false);
             $("#updates-loading").attr('hidden', true);
+            $("#update-btn").attr('disabled', updated);
         })
+    });
+
+    $("#update-btn").on('click', function() {
+        $.ajax({
+            url: "/api/update_server",
+            method: "POST"
+        })
+        .done(function(res) {
+            flash(res);
+        })
+        .fail(function() {
+            flash("Error with request", "error");
+        })
+        .always(function() {
+            $("#updatesModal").modal('hide');
+        });
     });
 });

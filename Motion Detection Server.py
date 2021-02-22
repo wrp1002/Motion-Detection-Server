@@ -1,17 +1,15 @@
 from cv2 import cv2
-import numpy as np
-import time
 import threading
-import queue
-import collections
-import sys
-import os
-import json
+import queue, collections
+import sys, os, time
 from Log import Log
+
 import ConfigManager as config
 import EmailManager as email
 import Webserver as web
 import VideoManager as video
+import Updater as updater
+
 
 CONFIG_FILE_NAME = "config.json"
 scriptDir = os.path.dirname(sys.argv[0])
@@ -27,6 +25,8 @@ def HandleMenu():
     cmd = int(input(">"))
     return options[cmd-1]
 
+def RestartServer():
+    os.execv(sys.executable, [sys.executable] + sys.argv)
 
 def main():
     config.LoadConfig()
@@ -41,7 +41,12 @@ def main():
     cv2.destroyAllWindows()
 
     if shutdownState == "restart":
-        main()
+        RestartServer()
+    elif shutdownState == "update":
+        Log("Updating server...")
+        #updater.Update()
+        RestartServer()
+
 
 if __name__ == "__main__":
     main()
