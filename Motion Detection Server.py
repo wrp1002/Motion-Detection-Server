@@ -14,9 +14,6 @@ import Updater as updater
 CONFIG_FILE_NAME = "config.json"
 scriptDir = os.path.dirname(sys.argv[0])
 
-#cam = VideoDevice("PiCam", "rtsp://192.168.4.23:8554/unicast", 10, 1.5)
-#cam = VideoDevice("6 Cam", "rtsp://admin:chris!@192.168.4.38:8554/live", 30, 1.5)
-
 def HandleMenu():
     options = ["Exit"]
     for i, val in enumerate(options):
@@ -26,6 +23,7 @@ def HandleMenu():
     return options[cmd-1]
 
 def RestartServer():
+    Log("Restarting server")
     os.execv(sys.executable, [sys.executable] + sys.argv)
 
 def main():
@@ -33,8 +31,12 @@ def main():
     email.Init()
     video.InitCams()
 
-    web.Run()
+    try:
+        web.Run()
+    except:
+        print("EXCEPTION!")
     shutdownState = web.GetShutdownState()
+    print(shutdownState)
 
     Log("Server Shutting Down...")
     video.Stop()

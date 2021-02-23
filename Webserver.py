@@ -13,20 +13,28 @@ app.secret_key = b'SDFKHW$%^8wTsoigt098'
 self = sys.modules[__name__]
 self.shutdownState = None
 
-def Stop():
+def shutdown_server():
+    #raise RuntimeError("Server shutdown")
+    func = request.environ.get('werkzeug.server.shutdown')
+    if func is None:
+        return False
+    func()
+    return True
+
+def Shutdown():
     self.shutdownState = "shutdown"
-    time.sleep(1)
-    os.kill(os.getpid(), signal.SIGINT)
+    #os.kill(os.getpid(), signal.SIGINT)
+    return shutdown_server()
 
 def Restart():
     self.shutdownState = "restart"
-    time.sleep(1)
-    os.kill(os.getpid(), signal.SIGINT)
+    #os.kill(os.getpid(), signal.SIGINT)
+    shutdown_server()
 
 def UpdateServer():
     self.shutdownState = "update"
-    time.sleep(1)
-    os.kill(os.getpid(), signal.SIGINT)
+    #os.kill(os.getpid(), signal.SIGINT)
+    return shutdown_server()
 
 def GetShutdownState():
     return self.shutdownState
@@ -108,17 +116,17 @@ def set_motion(state):
 
 @app.route('/api/restart')
 def restart():
-    threading.Thread(target=Restart).start()
+    Restart()
     return Response('Restarting...', 200)
 
 @app.route('/api/shutdown')
 def shutdown():
-    threading.Thread(target=Stop).start()
+    Shutdown()
     return Response('Shutting down...', 200)
 
 @app.route('/api/update_server')
 def api_update_server():
-    threading.Thread(target=UpdateServer).start()
+    UpdateServer()
     return Response("Updating...", 200)
 
 @app.route('/api/cam_info')
