@@ -14,26 +14,23 @@ self = sys.modules[__name__]
 self.shutdownState = None
 
 def shutdown_server():
-    #raise RuntimeError("Server shutdown")
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
         return False
+
     func()
     return True
 
 def Shutdown():
     self.shutdownState = "shutdown"
-    #os.kill(os.getpid(), signal.SIGINT)
     return shutdown_server()
 
 def Restart():
     self.shutdownState = "restart"
-    #os.kill(os.getpid(), signal.SIGINT)
-    shutdown_server()
+    return shutdown_server()
 
 def UpdateServer():
     self.shutdownState = "update"
-    #os.kill(os.getpid(), signal.SIGINT)
     return shutdown_server()
 
 def GetShutdownState():
@@ -116,18 +113,26 @@ def set_motion(state):
 
 @app.route('/api/restart')
 def restart():
-    Restart()
-    return Response('Restarting...', 200)
+    if Restart():
+        print("success")
+        return Response('Restarting...', 200)
+    else:
+        print("fail")
+        return Response('Error restarting server', 400)
 
 @app.route('/api/shutdown')
 def shutdown():
-    Shutdown()
-    return Response('Shutting down...', 200)
+    if Shutdown():
+        return Response('Shutting down...', 200)
+    else:
+        return Response('Error shutting down server', 400)
 
 @app.route('/api/update_server')
 def api_update_server():
-    UpdateServer()
-    return Response("Updating...", 200)
+    if UpdateServer():
+        return Response("Updating...", 200)
+    else:
+        return Response('Error shutting down server', 400)
 
 @app.route('/api/cam_info')
 def cameras_status():
@@ -141,6 +146,10 @@ def api_versions():
         "current": config.GetValue("version")
     }
     return Response(json.dumps(versions))
+
+@app.route('/api/ping')
+def api_ping():
+    return Response("pong!", 200)
 
 
 def Run(debug=False):

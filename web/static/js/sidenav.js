@@ -1,11 +1,31 @@
 $(document).ready(function() {
+    let pingCount = 0;
+
+    // Wait for server to shutdown
+    function PingServerForShutdown() {
+        $.ajax({
+            url: "/api/ping",
+            timeout: 1000
+        })
+        .fail(function() {
+            pingCount = 100;
+            flash("Server shutdown!", "success")
+        })
+        .always(function() {
+            pingCount++;
+            if (pingCount < 10)
+                PingServerForShutdown();
+        })
+    }
+
+    // Collapse sidebar
     $("#sidebar").on('mouseleave', function() {
         $(".dropdown-toggle").attr("aria-expanded", false);
         $(".collapse").collapse('hide');
         setTimeout(function() {$(".collapse").collapse('hide');}, 400);
     })
 
-
+    // Restart
     $("#restart-btn").on('click', function() {
         $.ajax({
             url: "/api/restart"
@@ -13,15 +33,49 @@ $(document).ready(function() {
         .done(function(res) {
             flash(res);
             setTimeout(function(){location.reload();}, 1000);
-        });
+        })
+        .fail(function(res) {
+            flash(res.responseText, "error");
+        })
     });
 
+    // Shutdown 
     $("#shutdown-btn").on('click', function() {
+        console.log('shutdown click')
+        console.log($("#shutdownModal"));
+        $("#shutdownModal").modal('show');
+    });
+
+    $("#shutdown-modal-btn").on('click', function() {
         $.ajax({
             url: "/api/shutdown"
         })
         .done(function(res) {
             flash(res);
+            pingCount = 0;
+            PingServerForShutdown();
+        })
+        .fail(function(res) {
+            flash(res.responseText, "error");
+        })
+        .always(function() {
+            $("#shutdownModal").modal('hide');
+        })
+    });
+
+    // Update
+    $("#update-btn").on('click', function() {
+        $.ajax({
+            url: "/api/update_server"
+        })
+        .done(function(res) {
+            flash(res);
+        })
+        .fail(function(res) {
+            flash(res.responseText, "error");
+        })
+        .always(function() {
+            $("#updatesModal").modal('hide');
         });
     });
 
@@ -46,18 +100,4 @@ $(document).ready(function() {
         })
     });
 
-    $("#update-btn").on('click', function() {
-        $.ajax({
-            url: "/api/update_server"
-        })
-        .done(function(res) {
-            flash(res);
-        })
-        .fail(function() {
-            flash("Error with request", "error");
-        })
-        .always(function() {
-            $("#updatesModal").modal('hide');
-        });
-    });
 });
