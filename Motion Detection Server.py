@@ -44,7 +44,7 @@ def main():
         RestartServer()
     elif shutdownState == "update":
         Log("Updating server...")
-        #updater.Update()
+        updater.Update()
         RestartServer()
 
 

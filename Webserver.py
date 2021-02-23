@@ -62,7 +62,7 @@ def configPage():
         data = request.form.get("data")
         data = json.loads(data)
         config.SaveConfig(data)
-        return Response("Config Saved!", 200)
+        return Response("Config Saved! Restart server for changes to take effect", 200)
     elif request.method == "DELETE":
         config.RestoreConfig()
         return Response("Config Restored", 200)
@@ -116,7 +116,7 @@ def shutdown():
     threading.Thread(target=Stop).start()
     return Response('Shutting down...', 200)
 
-@app.route('/api/update_server', methods=["POST"])
+@app.route('/api/update_server')
 def api_update_server():
     threading.Thread(target=UpdateServer).start()
     return Response("Updating...", 200)

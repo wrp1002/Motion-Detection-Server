@@ -48,8 +48,7 @@ $(document).ready(function() {
 
     $("#update-btn").on('click', function() {
         $.ajax({
-            url: "/api/update_server",
-            method: "POST"
+            url: "/api/update_server"
         })
         .done(function(res) {
             flash(res);
